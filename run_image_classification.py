@@ -333,6 +333,7 @@ def main():
         trainer.save_state()
 
     # Evaluation
+    earlystop = False
     if training_args.do_eval:
         ds["test"].set_transform(val_transforms)
         metrics = trainer.evaluate(eval_dataset = ds["test"])
@@ -342,8 +343,13 @@ def main():
         if all_alpha:
             print(f'the avg threshold is {sum(all_alpha)/ len(all_alpha)}')
         if model.sparsity:
-            sparsity = [i.cpu() for i in model.sparsity if type(i) is not float]
-            print(f'the sparsity is {sum(sparsity)/ len(sparsity)}')
+            if not earlystop:
+                sparsity = [i.cpu() for i in model.sparsity if type(i) is not float]
+                print(f'the sparsity is {sum(sparsity)/ len(sparsity)}')
+            else:
+                # sparsity = [[j.cpu() for j in model.sparsity[i]] for i in range(len(model.sparsity))]
+                sparsity = [sum(i)/len(i) for i in model.sparsity]
+                print(f'the sparsity {sparsity}')
     # Write model card and (optionally) push to hub
     kwargs = {
         "finetuned_from": model_args.model_name_or_path,
